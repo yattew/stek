@@ -15,6 +15,11 @@ public:
     unordered_map<string, string> user_words_dictionary;
     unordered_map<string, string> user_variables_dictionary;
     string skip_to;
+    int extra_skips;
+
+    Interpreter() : extra_skips(0)
+    {
+    }
     void interpret(const string &s);
     vector<string> tokenize(const string &s);
     void add();
@@ -46,9 +51,26 @@ void Interpreter::interpret(const string &s)
     {
         if (skip_to.size() > 0)
         {
+            if (skip_to == "else" && tokens[idx] == "if")
+            {
+                extra_skips++;
+                idx++;
+                continue;
+            }
+            else if(skip_to == "end" && tokens[idx] == "else")
+            {
+                extra_skips++;
+                idx++;
+                continue;
+            }
             if (tokens[idx] == skip_to)
             {
-                skip_to = "";
+                extra_skips--;
+                if (extra_skips < 0)
+                {
+                    skip_to = "";
+                    extra_skips = 0;
+                }
             }
             idx++;
             continue;
@@ -98,7 +120,7 @@ void Interpreter::interpret(const string &s)
         else if (tokens[idx] == "variable")
         {
         }
-        else if(tokens[idx] == "empty")
+        else if (tokens[idx] == "empty")
         {
             empty();
         }
@@ -138,7 +160,8 @@ void Interpreter::if_do()
         skip_to = "else";
     }
 }
-void Interpreter::if_else(){
+void Interpreter::if_else()
+{
     skip_to = "end";
 }
 void Interpreter::if_end()
@@ -248,8 +271,9 @@ void Interpreter::show()
     }
     cout << endl;
 }
-void Interpreter::empty(){
-    while(!main_stack.empty())
+void Interpreter::empty()
+{
+    while (!main_stack.empty())
     {
         main_stack.pop();
     }
