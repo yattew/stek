@@ -28,14 +28,17 @@ public:
     void divide();
     void remainder();
     void dup();
-    void if_if();
-    void if_do();
-    void if_else();
-    void if_end();
+    void _if();
+    void _do();
+    void _else();
+    void _end();
     void top();
     void pop();
     void show();
     void empty();
+    void _or();
+    void _and();
+    void _not();
     bool is_truthy(string token);
     void compile_word();
     void run_word(string word_string);
@@ -97,19 +100,31 @@ void Interpreter::interpret(const string &s)
             equal_to();
         else if (tokens[idx] == "if")
         {
-            if_if();
+            _if();
         }
         else if (tokens[idx] == "do")
         {
-            if_do();
+            _do();
         }
         else if (tokens[idx] == "else")
         {
-            if_else();
+            _else();
         }
         else if (tokens[idx] == "end")
         {
-            if_end();
+            _end();
+        }
+        else if(tokens[idx] == "and")
+        {
+            _and();
+        }
+        else if(tokens[idx] == "or")
+        {
+            _or();
+        }
+        else if(tokens[idx] == "not")
+        {
+            _not();
         }
         else if (tokens[idx] == "makeword")
         {
@@ -144,11 +159,11 @@ void Interpreter::interpret(const string &s)
         idx++;
     }
 }
-void Interpreter::if_if()
+void Interpreter::_if()
 {
     control_flow_stack.push("if");
 }
-void Interpreter::if_do()
+void Interpreter::_do()
 {
     string top = main_stack.top();
     main_stack.pop();
@@ -160,15 +175,42 @@ void Interpreter::if_do()
         skip_to = "else";
     }
 }
-void Interpreter::if_else()
+void Interpreter::_else()
 {
     skip_to = "end";
 }
-void Interpreter::if_end()
+void Interpreter::_end()
 {
     control_flow_stack.pop();
 }
-
+void Interpreter::_and(){
+    string top = main_stack.top();
+    main_stack.pop();
+    string top2 = main_stack.top();
+    main_stack.pop();
+    if(is_truthy(top)&&is_truthy(top2))
+        main_stack.push("1");
+    else
+        main_stack.push("0");
+}
+void Interpreter::_or(){
+    string top = main_stack.top();
+    main_stack.pop();
+    string top2 = main_stack.top();
+    main_stack.pop();
+    if(is_truthy(top)||is_truthy(top2))
+        main_stack.push("1");
+    else
+        main_stack.push("0");
+}
+void Interpreter::_not(){
+    string top = main_stack.top();
+    main_stack.pop();
+    if(is_truthy(top))
+        main_stack.push("0");
+    else
+        main_stack.push("1");
+}
 void Interpreter::compile_word()
 {
     //todo compile words
