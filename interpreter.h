@@ -1,7 +1,9 @@
 using namespace std;
+
 //********* definations*****************************
 #define FLOAT_THRESHOLD 0.0001
 //***************************************************
+
 //**************forward declarations*****************
 bool is_number(string s);
 //***************************************************
@@ -11,13 +13,17 @@ class Interpreter
 {
 public:
     stack<string> main_stack;
-    stack<string> control_flow_stack;
+    stack<pair<string, int>> control_flow_stack;
     unordered_map<string, string> user_words_dictionary;
     unordered_map<string, string> user_variables_dictionary;
-    string skip_to;
+    pair<
+        string,
+        pair<string, int>>
+        skip_to;
+    bool ignore_tokens;
     int extra_skips;
-
-    Interpreter() : extra_skips(0)
+    int tokens_count;
+    Interpreter() : extra_skips(0), ignore_tokens(false), tokens_count(0)
     {
     }
     void interpret(const string &s);
@@ -52,53 +58,7 @@ void Interpreter::interpret(const string &s)
     int idx = 0;
     while (idx != tokens.size())
     {
-        if (skip_to.size() > 0)
-        {
-            if (skip_to == "else" && tokens[idx] == "if")
-            {
-                extra_skips++;
-                idx++;
-                continue;
-            }
-            else if(skip_to == "end" && tokens[idx] == "else")
-            {
-                extra_skips++;
-                idx++;
-                continue;
-            }
-            if (tokens[idx] == skip_to)
-            {
-                extra_skips--;
-                if (extra_skips < 0)
-                {
-                    skip_to = "";
-                    extra_skips = 0;
-                }
-            }
-            idx++;
-            continue;
-        }
-        if (is_number(tokens[idx]))
-            main_stack.push(tokens[idx]);
-        else if (tokens[idx] == "+")
-            add();
-        else if (tokens[idx] == "-")
-            subtract();
-        else if (tokens[idx] == "*")
-            multiply();
-        else if (tokens[idx] == "/")
-            divide();
-        else if (tokens[idx] == "%")
-            remainder();
-        else if (tokens[idx] == "dup")
-            dup();
-        else if (tokens[idx] == "<")
-            less_than();
-        else if (tokens[idx] == ">")
-            greater_than();
-        else if (tokens[idx] == "==")
-            equal_to();
-        else if (tokens[idx] == "if")
+        if (tokens[idx] == "if")
         {
             _if();
         }
@@ -114,99 +74,141 @@ void Interpreter::interpret(const string &s)
         {
             _end();
         }
-        else if(tokens[idx] == "and")
-        {
-            _and();
-        }
-        else if(tokens[idx] == "or")
-        {
-            _or();
-        }
-        else if(tokens[idx] == "not")
-        {
-            _not();
-        }
-        else if (tokens[idx] == "makeword")
-        {
-        }
-        else if (tokens[idx] == "begin")
-        {
-        }
-        else if (tokens[idx] == "variable")
-        {
-        }
-        else if (tokens[idx] == "empty")
-        {
-            empty();
-        }
-        else if (tokens[idx] == "pop")
-            pop();
-        else if (tokens[idx] == "show")
-            show();
-        else if (tokens[idx] == "top")
-            top();
         else
         {
-            unordered_map<string, string>::iterator it = user_words_dictionary.find(tokens[idx]);
-            if (it == user_words_dictionary.end())
-                cout << "the word <" << tokens[idx] << " " << idx << "> is not defined" << endl;
-            else
+            if (!ignore_tokens)
             {
-                string word_string = it->second;
-                run_word(word_string);
+                if (is_number(tokens[idx]))
+                    main_stack.push(tokens[idx]);
+                else if (tokens[idx] == "+")
+                    add();
+                else if (tokens[idx] == "-")
+                    subtract();
+                else if (tokens[idx] == "*")
+                    multiply();
+                else if (tokens[idx] == "/")
+                    divide();
+                else if (tokens[idx] == "%")
+                    remainder();
+                else if (tokens[idx] == "dup")
+                    dup();
+                else if (tokens[idx] == "<")
+                    less_than();
+                else if (tokens[idx] == ">")
+                    greater_than();
+                else if (tokens[idx] == "==")
+                    equal_to();
+                else if (tokens[idx] == "and")
+                    _and();
+                else if (tokens[idx] == "or")
+                    _or();
+                else if (tokens[idx] == "not")
+                    _not();
+                else if (tokens[idx] == "makeword")
+                    ;
+                else if (tokens[idx] == "begin")
+                    ;
+                else if (tokens[idx] == "variable")
+                    ;
+                else if (tokens[idx] == "empty")
+                    empty();
+                else if (tokens[idx] == "pop")
+                    pop();
+                else if (tokens[idx] == "show")
+                    show();
+                else if (tokens[idx] == "top")
+                    top();
+                else
+                {
+                    unordered_map<string, string>::iterator it = user_words_dictionary.find(tokens[idx]);
+                    if (it == user_words_dictionary.end())
+                        cout << "the word <" << tokens[idx] << " " << idx << "> is not defined" << endl;
+                    else
+                    {
+                        string word_string = it->second;
+                        run_word(word_string);
+                    }
+                }
             }
         }
+        tokens_count++;
         idx++;
     }
 }
+
 void Interpreter::_if()
 {
-    control_flow_stack.push("if");
+    control_flow_stack.push(make_pair("if", tokens_count));
 }
 void Interpreter::_do()
 {
+    if (skip_to.first.length() != 0)
+        return;
     string top = main_stack.top();
     main_stack.pop();
-    if (is_truthy(top))
+    if (!is_truthy(top))
     {
-    }
-    else
-    {
-        skip_to = "else";
+        skip_to = make_pair("else", control_flow_stack.top());
+        ignore_tokens = true;
     }
 }
 void Interpreter::_else()
 {
-    skip_to = "end";
+    if (skip_to.first.length() != 0)
+    {
+        if (control_flow_stack.top().second != skip_to.second.second)
+        {
+
+            return;
+        }
+        ignore_tokens = false;
+        skip_to.first = "";
+    }
+    else
+    {
+        skip_to = make_pair("end", control_flow_stack.top());
+        ignore_tokens = true;
+    }
 }
 void Interpreter::_end()
 {
+    if (control_flow_stack.top().second != skip_to.second.second)
+    {
+        control_flow_stack.pop();
+        return;
+    }
     control_flow_stack.pop();
+    ignore_tokens = false;
+    skip_to.first = "";
 }
-void Interpreter::_and(){
+
+void Interpreter::_and()
+{
     string top = main_stack.top();
     main_stack.pop();
     string top2 = main_stack.top();
     main_stack.pop();
-    if(is_truthy(top)&&is_truthy(top2))
+    if (is_truthy(top) && is_truthy(top2))
         main_stack.push("1");
     else
         main_stack.push("0");
 }
-void Interpreter::_or(){
+void Interpreter::_or()
+{
     string top = main_stack.top();
     main_stack.pop();
     string top2 = main_stack.top();
     main_stack.pop();
-    if(is_truthy(top)||is_truthy(top2))
+    if (is_truthy(top) || is_truthy(top2))
         main_stack.push("1");
     else
         main_stack.push("0");
 }
-void Interpreter::_not(){
+void Interpreter::_not()
+{
     string top = main_stack.top();
     main_stack.pop();
-    if(is_truthy(top))
+    if (is_truthy(top))
         main_stack.push("0");
     else
         main_stack.push("1");
@@ -225,7 +227,7 @@ vector<string> Interpreter::tokenize(const string &s)
     string temp;
     for (auto x : s)
     {
-        if (x == ' ')
+        if (x == ' ' || x == '\t' || x == '\n')
         {
             if (temp.size() > 0)
             {
