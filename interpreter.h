@@ -51,6 +51,7 @@ public:
     void less_than();
     void greater_than();
     void equal_to();
+    void clear();
 };
 void Interpreter::interpret(const string &s)
 {
@@ -118,6 +119,8 @@ void Interpreter::interpret(const string &s)
                     show();
                 else if (tokens[idx] == "top")
                     top();
+                else if(tokens[idx] == "clear")
+                    clear();
                 else
                 {
                     unordered_map<string, string>::iterator it = user_words_dictionary.find(tokens[idx]);
@@ -158,7 +161,6 @@ void Interpreter::_else()
     {
         if (control_flow_stack.top().second != skip_to.second.second)
         {
-
             return;
         }
         ignore_tokens = false;
@@ -367,4 +369,10 @@ bool Interpreter::is_truthy(string token)
     else if (token.length() > 0)
         flag = true;
     return flag;
+}
+void Interpreter::clear(){
+    while(!main_stack.empty())
+    {
+        main_stack.pop();
+    }
 }
