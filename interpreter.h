@@ -1,5 +1,5 @@
 using namespace std;
- 
+
 //********* definations*****************************
 #define FLOAT_THRESHOLD 0.0001
 //***************************************************
@@ -13,18 +13,18 @@ class Interpreter
 {
 public:
     stack<string> main_stack;
-    stack<pair<string, int>> control_flow_stack;
+    stack<pair<STATE, bool>> control_flow_stack;
+    // stack<pair<string, int>> control_flow_stack;
     unordered_map<string, string> user_words_dictionary;
     unordered_map<string, string> user_variables_dictionary;
     pair<
         string,
         pair<string, int>>
         skip_to;
-    bool ignore_tokens;
-    int extra_skips;
     int tokens_count;
-    Interpreter() : extra_skips(0), ignore_tokens(false), tokens_count(0)
+    Interpreter() : tokens_count(0)
     {
+        control_flow_stack.push(make_pair(NORMAL, true));
     }
     void interpret(const string &s);
     vector<string> tokenize(const string &s);
@@ -77,7 +77,7 @@ void Interpreter::interpret(const string &s)
         }
         else
         {
-            if (!ignore_tokens)
+            if (control_flow_stack.top().second == true)
             {
                 if (is_number(tokens[idx]))
                     main_stack.push(tokens[idx]);
@@ -119,7 +119,7 @@ void Interpreter::interpret(const string &s)
                     show();
                 else if (tokens[idx] == "top")
                     top();
-                else if(tokens[idx] == "clear")
+                else if (tokens[idx] == "clear")
                     clear();
                 else
                 {
@@ -141,47 +141,50 @@ void Interpreter::interpret(const string &s)
 
 void Interpreter::_if()
 {
-    control_flow_stack.push(make_pair("if", tokens_count));
+    bool this_block = true;
+    if (control_flow_stack.top().second == false)
+    {
+        this_block = false;
+    }
+    control_flow_stack.push(make_pair(NORMAL, this_block));
 }
+
 void Interpreter::_do()
 {
-    if (skip_to.first.length() != 0)
-        return;
-    string top = main_stack.top();
-    main_stack.pop();
-    if (!is_truthy(top))
+    pair<STATE, bool> &curr_state = control_flow_stack.top();
+    if (curr_state.second)
     {
-        skip_to = make_pair("else", control_flow_stack.top());
-        ignore_tokens = true;
+        string token = main_stack.top();
+        main_stack.pop();
+
+        if (is_truthy(token))
+        {
+            curr_state.second = true;
+        }
+        else
+        {
+            curr_state.second = false;
+        }
     }
 }
 void Interpreter::_else()
 {
-    if (skip_to.first.length() != 0)
+    pair<STATE, bool> curr_state = control_flow_stack.top();
+    control_flow_stack.pop();
+    pair<STATE, bool> prev_state = control_flow_stack.top();
+    pair<STATE, bool> new_state = make_pair(ELSE, false);
+    if (prev_state.second)
     {
-        if (control_flow_stack.top().second != skip_to.second.second)
+        if (curr_state.second == false)
         {
-            return;
+            new_state.second = true;
         }
-        ignore_tokens = false;
-        skip_to.first = "";
     }
-    else
-    {
-        skip_to = make_pair("end", control_flow_stack.top());
-        ignore_tokens = true;
-    }
+    control_flow_stack.push(new_state);
 }
 void Interpreter::_end()
 {
-    if (control_flow_stack.top().second != skip_to.second.second)
-    {
-        control_flow_stack.pop();
-        return;
-    }
     control_flow_stack.pop();
-    ignore_tokens = false;
-    skip_to.first = "";
 }
 
 void Interpreter::_and()
@@ -370,8 +373,9 @@ bool Interpreter::is_truthy(string token)
         flag = true;
     return flag;
 }
-void Interpreter::clear(){
-    while(!main_stack.empty())
+void Interpreter::clear()
+{
+    while (!main_stack.empty())
     {
         main_stack.pop();
     }
