@@ -7,7 +7,14 @@ using namespace std;
 //**************forward declarations*****************
 bool is_number(string s);
 //***************************************************
-
+//***************STATES******************************
+enum STATE{
+    NORMAL,
+    IF,
+    ELSE,
+    WHILE,
+};
+//**************************************************
 //todo add error handling
 class Interpreter
 {

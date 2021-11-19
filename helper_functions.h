@@ -16,10 +16,3 @@ bool is_number(string s)
     }
     return char_pos == s.size();
 }
-
-enum STATE{
-    NORMAL,
-    IF,
-    ELSE,
-    WHILE,
-};
