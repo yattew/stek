@@ -21,13 +21,8 @@ class Interpreter
 public:
     stack<string> main_stack;
     stack<pair<STATE, bool>> control_flow_stack;
-    // stack<pair<string, int>> control_flow_stack;
     unordered_map<string, string> user_words_dictionary;
-    unordered_map<string, string> user_variables_dictionary;
-    pair<
-        string,
-        pair<string, int>>
-        skip_to;
+    unordered_map<string, string> user_variables_dictionary;;
     int tokens_count;
     Interpreter() : tokens_count(0)
     {
@@ -60,6 +55,7 @@ public:
     void equal_to();
     void clear();
 };
+
 void Interpreter::interpret(const string &s)
 {
     vector<string> tokens = tokenize(s);
@@ -322,8 +318,15 @@ void Interpreter::show()
     cout << "<" << helper.size() << "> ";
     while (!helper.empty())
     {
-        cout << helper.top() << " ";
+        string tkn = helper.top();
         helper.pop();
+        if(is_number(tkn))
+        {
+            cout<<stof(tkn)<<" ";
+        }
+        else{
+            cout<<tkn<<" ";
+        }
     }
     cout << endl;
 }
