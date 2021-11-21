@@ -61,41 +61,76 @@ public:
     void greater_than();
     void equal_to();
     void clear();
+    bool inside_compile_condn();
+    bool inside_compile_block();
 };
-
+bool Interpreter::inside_compile_condn()
+{
+    stack<pair<STATE, bool>> st_cp = control_flow_stack;
+    while (!st_cp.empty())
+    {
+        if (st_cp.top().first == STATE::COMPILE_CONDN)
+        {
+            return true;
+        }
+        st_cp.pop();
+    }
+    return false;
+}
+bool Interpreter::inside_compile_block()
+{
+    stack<pair<STATE, bool>> st_cp = control_flow_stack;
+    while (!st_cp.empty())
+    {
+        if (st_cp.top().first == STATE::COMPILE_BLOCK)
+        {
+            return true;
+        }
+        st_cp.pop();
+    }
+    return false;
+}
 void Interpreter::interpret(const string s)
 {
     vector<string> tokens = tokenize(s);
     int idx = 0;
     while (idx != tokens.size())
     {
-        if (tokens[idx] == "if")
+        if (tokens[idx] == "end")
         {
-            _if();
+            _end();
+            idx++;
+            tokens_count++;
+            continue;
         }
         else if (tokens[idx] == "do")
         {
             _do();
+            idx++;
+            tokens_count++;
+            continue;
         }
+        else if (inside_compile_condn())
+        {
+            while_stack.top().first += tokens[idx] + " ";
+        }
+        else if (inside_compile_block())
+        {
+            while_stack.top().second += tokens[idx] + " ";
+        }
+        if (tokens[idx] == "if")
+        {
+            _if();
+        }
+
         else if (tokens[idx] == "else")
         {
             _else();
         }
-        else if (tokens[idx] == "end")
-        {
-            _end();
-        }
+
         else if (tokens[idx] == "while")
         {
             _while();
-        }
-        else if (control_flow_stack.top().first == STATE::COMPILE_CONDN)
-        {
-            while_stack.top().first += tokens[idx] + " ";
-        }
-        else if (control_flow_stack.top().first == STATE::COMPILE_BLOCK)
-        {
-            while_stack.top().second += tokens[idx] + " ";
         }
         else
         {
@@ -166,7 +201,7 @@ void Interpreter::_while()
     if (control_flow_stack.top().second == true)
     {
         control_flow_stack.push(make_pair(WHILE, true));
-        control_flow_stack.push(make_pair(COMPILE_CONDN, true));
+        control_flow_stack.push(make_pair(COMPILE_CONDN, false));
         string condn;
         string block;
         while_stack.push(make_pair(condn, block));
@@ -210,8 +245,14 @@ void Interpreter::_do()
     if (curr_state.first == COMPILE_CONDN)
     {
         control_flow_stack.pop();
-        control_flow_stack.push(make_pair(COMPILE_BLOCK, true));
+        control_flow_stack.push(make_pair(COMPILE_BLOCK, false));
 
+        return;
+    }
+    if (inside_compile_block() &&
+        control_flow_stack.top().first != STATE::COMPILE_BLOCK)
+    {
+        while_stack.top().second += "do ";
         return;
     }
     if (curr_state.second)
@@ -251,7 +292,14 @@ void Interpreter::_end()
     }
     if (control_flow_stack.top().first == STATE::WHILE)
     {
+        cout << while_stack.top().first << endl;
+        cout << while_stack.top().second << endl;
         execute_while();
+    }
+    if (inside_compile_block() &&
+        control_flow_stack.top().first != STATE::COMPILE_BLOCK)
+    {
+        while_stack.top().second += "end ";
     }
     control_flow_stack.pop();
 }
