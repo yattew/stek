@@ -1,0 +1,21 @@
+#case 1, divisible by 2 but not 4
+0 while 1 + dup 10 < do
+    if dup 2 % 0 == do
+        if dup 4 % 0 == do
+        else
+            top
+        end
+    end
+end
+clear
+
+#case 2, if while inside if, finding even numbers
+if 1 do
+    10 while 1 - dup do
+        if dup 2 % 0 == do
+            top
+        end
+    end
+end
+clear
+#################################
