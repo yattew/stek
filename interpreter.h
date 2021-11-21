@@ -8,11 +8,14 @@ using namespace std;
 bool is_number(string s);
 //***************************************************
 //***************STATES******************************
-enum STATE{
+enum STATE
+{
     NORMAL,
     IF,
     ELSE,
     WHILE,
+    COMPILE_CONDN,
+    COMPILE_BLOCK,
 };
 //**************************************************
 //todo add error handling
@@ -21,15 +24,17 @@ class Interpreter
 public:
     stack<string> main_stack;
     stack<pair<STATE, bool>> control_flow_stack;
+    stack<pair<string, string>> while_stack;
     unordered_map<string, string> user_words_dictionary;
-    unordered_map<string, string> user_variables_dictionary;;
+    unordered_map<string, string> user_variables_dictionary;
+    ;
     int tokens_count;
     Interpreter() : tokens_count(0)
     {
         control_flow_stack.push(make_pair(NORMAL, true));
     }
-    void interpret(const string &s);
-    vector<string> tokenize(const string &s);
+    void interpret(const string s);
+    vector<string> tokenize(const string s);
     void add();
     void subtract();
     void multiply();
@@ -40,6 +45,8 @@ public:
     void _do();
     void _else();
     void _end();
+    void _while();
+    void execute_while();
     void top();
     void pop();
     void show();
@@ -56,7 +63,7 @@ public:
     void clear();
 };
 
-void Interpreter::interpret(const string &s)
+void Interpreter::interpret(const string s)
 {
     vector<string> tokens = tokenize(s);
     int idx = 0;
@@ -77,6 +84,18 @@ void Interpreter::interpret(const string &s)
         else if (tokens[idx] == "end")
         {
             _end();
+        }
+        else if (tokens[idx] == "while")
+        {
+            _while();
+        }
+        else if (control_flow_stack.top().first == STATE::COMPILE_CONDN)
+        {
+            while_stack.top().first += tokens[idx] + " ";
+        }
+        else if (control_flow_stack.top().first == STATE::COMPILE_BLOCK)
+        {
+            while_stack.top().second += tokens[idx] + " ";
         }
         else
         {
@@ -142,6 +161,39 @@ void Interpreter::interpret(const string &s)
     }
 }
 
+void Interpreter::_while()
+{
+    if (control_flow_stack.top().second == true)
+    {
+        control_flow_stack.push(make_pair(WHILE, true));
+        control_flow_stack.push(make_pair(COMPILE_CONDN, true));
+        string condn;
+        string block;
+        while_stack.push(make_pair(condn, block));
+    }
+    else
+    {
+        control_flow_stack.push(make_pair(WHILE, false));
+    }
+}
+void Interpreter::execute_while()
+{
+    while (true)
+    {
+        interpret(while_stack.top().first);
+        bool check = is_truthy(main_stack.top());
+        main_stack.pop();
+        if (check)
+        {
+            interpret(while_stack.top().second);
+        }
+        else
+        {
+            break;
+        }
+    }
+    while_stack.pop();
+}
 void Interpreter::_if()
 {
     bool this_block = true;
@@ -149,17 +201,23 @@ void Interpreter::_if()
     {
         this_block = false;
     }
-    control_flow_stack.push(make_pair(NORMAL, this_block));
+    control_flow_stack.push(make_pair(IF, this_block));
 }
 
 void Interpreter::_do()
 {
     pair<STATE, bool> &curr_state = control_flow_stack.top();
+    if (curr_state.first == COMPILE_CONDN)
+    {
+        control_flow_stack.pop();
+        control_flow_stack.push(make_pair(COMPILE_BLOCK, true));
+
+        return;
+    }
     if (curr_state.second)
     {
         string token = main_stack.top();
         main_stack.pop();
-
         if (is_truthy(token))
         {
             curr_state.second = true;
@@ -187,6 +245,14 @@ void Interpreter::_else()
 }
 void Interpreter::_end()
 {
+    if (control_flow_stack.top().first == STATE::COMPILE_BLOCK)
+    {
+        control_flow_stack.pop();
+    }
+    if (control_flow_stack.top().first == STATE::WHILE)
+    {
+        execute_while();
+    }
     control_flow_stack.pop();
 }
 
@@ -229,7 +295,7 @@ void Interpreter::run_word(string word_string)
 {
     //todo run the compiles words
 }
-vector<string> Interpreter::tokenize(const string &s)
+vector<string> Interpreter::tokenize(const string s)
 {
     vector<string> tokens;
     string temp;
@@ -300,7 +366,14 @@ void Interpreter::dup()
 }
 void Interpreter::top()
 {
-    cout << main_stack.top() << endl;
+    if (is_number(main_stack.top()))
+    {
+        cout << stof(main_stack.top()) << endl;
+    }
+    else
+    {
+        cout << main_stack.top() << endl;
+    }
 }
 void Interpreter::pop()
 {
@@ -320,12 +393,13 @@ void Interpreter::show()
     {
         string tkn = helper.top();
         helper.pop();
-        if(is_number(tkn))
+        if (is_number(tkn))
         {
-            cout<<stof(tkn)<<" ";
+            cout << stof(tkn) << " ";
         }
-        else{
-            cout<<tkn<<" ";
+        else
+        {
+            cout << tkn << " ";
         }
     }
     cout << endl;
