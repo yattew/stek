@@ -292,8 +292,6 @@ void Interpreter::_end()
     }
     if (control_flow_stack.top().first == STATE::WHILE)
     {
-        cout << while_stack.top().first << endl;
-        cout << while_stack.top().second << endl;
         execute_while();
     }
     if (inside_compile_block() &&
