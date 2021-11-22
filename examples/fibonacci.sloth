@@ -1,0 +1,8 @@
+var first 0 first set
+var second 1 second set
+0 while 1 + dup 11 < do
+    first val second val +
+    top
+    second val first set
+    second set
+end

@@ -1,0 +1,10 @@
+var num 5 num set
+var res 1 res set
+num val 1 + num set
+while num val 1 - num set num val do
+    num val 
+    res val
+    *
+    res set
+end
+res val top pop
