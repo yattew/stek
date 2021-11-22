@@ -19,8 +19,18 @@ if 1 do
 end
 clear
 
+#case 3, while inside while
 10 while 1 - dup do
     10 while 1 - dup do
+        top
+    end
+    pop
+end
+pop
+
+#case 4, while inside while
+10 while 1 - dup 0 > do
+    dup while 1 - dup 0 > do
         top
     end
     pop

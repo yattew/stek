@@ -213,8 +213,6 @@ void Interpreter::_while()
 }
 void Interpreter::execute_while()
 {
-    cout << while_stack.top().first << endl;
-    cout << while_stack.top().second << endl;
     while (true)
     {
         interpret(while_stack.top().first);
