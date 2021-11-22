@@ -213,6 +213,8 @@ void Interpreter::_while()
 }
 void Interpreter::execute_while()
 {
+    cout << while_stack.top().first << endl;
+    cout << while_stack.top().second << endl;
     while (true)
     {
         interpret(while_stack.top().first);
@@ -290,7 +292,7 @@ void Interpreter::_end()
     {
         control_flow_stack.pop();
     }
-    if (control_flow_stack.top().first == STATE::WHILE)
+    if (control_flow_stack.top().first == STATE::WHILE && !inside_compile_block())
     {
         execute_while();
     }
