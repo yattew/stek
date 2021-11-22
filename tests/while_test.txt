@@ -36,6 +36,12 @@ pop
     pop
 end
 pop
+
+#case 5, while with variables
+var a 10 a set
+a val while 1 - dup 0 > do
+    top
+end
 #################################
 
 
