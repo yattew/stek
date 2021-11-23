@@ -1,4 +1,4 @@
-# __SLOTH__
+# __STEK__
 ---
 ## Introduction
  This is a stack oriented interpreted programming language inspired by forth and written in c++.
