@@ -28,7 +28,6 @@ public:
     stack<pair<string, string>> while_stack;
     unordered_map<string, string> user_words_dictionary;
     unordered_map<string, string> var_dict;
-    ;
     int tokens_count;
     Interpreter() : tokens_count(0)
     {
@@ -51,13 +50,10 @@ public:
     void top();
     void pop();
     void show();
-    void empty();
     void _or();
     void _and();
     void _not();
     bool is_truthy(string token);
-    void compile_word();
-    void run_word(string word_string);
     void less_than();
     void greater_than();
     void equal_to();
@@ -92,27 +88,15 @@ void Interpreter::interpret(const string s)
             continue;
         }
         else if (inside_compile_condn())
-        {
             while_stack.top().first += tokens[idx] + " ";
-        }
         else if (inside_compile_block())
-        {
             while_stack.top().second += tokens[idx] + " ";
-        }
         if (tokens[idx] == "if")
-        {
             _if();
-        }
-
         else if (tokens[idx] == "else")
-        {
             _else();
-        }
-
         else if (tokens[idx] == "while")
-        {
             _while();
-        }
         else
         {
             if (control_flow_stack.top().second == true)
@@ -143,14 +127,6 @@ void Interpreter::interpret(const string s)
                     _or();
                 else if (tokens[idx] == "not")
                     _not();
-                else if (tokens[idx] == "makeword")
-                    ;
-                else if (tokens[idx] == "begin")
-                    ;
-                else if (tokens[idx] == "variable")
-                    ;
-                else if (tokens[idx] == "empty")
-                    empty();
                 else if (tokens[idx] == "pop")
                     pop();
                 else if (tokens[idx] == "show")
@@ -160,21 +136,13 @@ void Interpreter::interpret(const string s)
                 else if (tokens[idx] == "clear")
                     clear();
                 else if (tokens[idx] == "var")
-                {
                     var();
-                }
                 else if (control_flow_stack.top().first == VAR)
-                {
                     declare_var(tokens[idx]);
-                }
                 else if (tokens[idx] == "set")
-                {
                     set();
-                }
                 else if (tokens[idx] == "val")
-                {
                     val();
-                }
                 else
                 {
                     auto it = var_dict.find(tokens[idx]);
@@ -384,14 +352,6 @@ void Interpreter::_not()
     else
         main_stack.push("1");
 }
-void Interpreter::compile_word()
-{
-    //todo compile words
-}
-void Interpreter::run_word(string word_string)
-{
-    //todo run the compiles words
-}
 vector<string> Interpreter::tokenize(const string s)
 {
     vector<string> tokens;
@@ -501,13 +461,6 @@ void Interpreter::show()
     }
     cout << endl;
 }
-void Interpreter::empty()
-{
-    while (!main_stack.empty())
-    {
-        main_stack.pop();
-    }
-}
 void Interpreter::less_than()
 {
     float top = stof(main_stack.top());
@@ -557,7 +510,5 @@ bool Interpreter::is_truthy(string token)
 void Interpreter::clear()
 {
     while (!main_stack.empty())
-    {
         main_stack.pop();
-    }
 }

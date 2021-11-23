@@ -6,8 +6,7 @@ using namespace std;
 int main(int argc, char *argv[])
 {
     Interpreter I;
-    char *program = *argv++;
-    if (*argv == NULL)
+    if (*(++argv) == NULL)
     {
         while (true)
         {
