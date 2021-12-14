@@ -6,7 +6,7 @@ using namespace std;
 int main(int argc, char *argv[])
 {
     Interpreter I;
-    if (*(++argv) == NULL)
+    if ( argc == 1)
     {
         while (true)
         {
@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
             I.interpret(in);
         }
     }
-    char*name = *argv++;
+    char*name = *(++argv);
     ifstream file(name);
     string contents;
     string temp;
