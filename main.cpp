@@ -18,9 +18,7 @@ int main(int argc, char *argv[])
     }
     char*name = *(++argv);
     ifstream file(name);
-    string contents;
     string temp;
-    while (getline(file, temp))
-        contents+=temp+" ";
-    I.interpret(contents);
+    while (file>>temp)
+        I.interpret(temp);
 }
