@@ -1,2 +1,2 @@
-g++ stek.cpp -o stek.exe
-./stek.exe
+$a = $args[0]
+./build/stek.exe $a
