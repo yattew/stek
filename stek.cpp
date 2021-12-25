@@ -1,6 +1,4 @@
-#include <bits/stdc++.h>
-#include "helper_functions.h"
-#include "interpreter.h"
+#include "includes.h"
 using namespace std;
 
 int main(int argc, char *argv[])
