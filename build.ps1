@@ -1,1 +1,0 @@
-g++ stek.cpp -o build/stek.exe
