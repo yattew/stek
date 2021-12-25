@@ -1,0 +1,8 @@
+var start 0 start set
+var end 10 end set
+start val while 1 + dup end val == do
+    if dup 2 % 0 == do
+        top
+    end
+end
+clear
