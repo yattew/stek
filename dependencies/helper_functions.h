@@ -16,3 +16,37 @@ bool is_number(string s)
     }
     return char_pos == s.size();
 }
+bool is_bool(string s)
+{
+    return (s == "true" || s == "false");
+}
+bool is_keyword(string s)
+{
+    unordered_set<string> keywords = {
+        "+",
+        "-",
+        "*",
+        "/",
+        "%",
+        "dup",
+        "<",
+        ">",
+        "==",
+        "and",
+        "or",
+        "not",
+        "pop",
+        "show",
+        "top",
+        "clear",
+        "var",
+        "set",
+        "val",
+        "if",
+        "do",
+        "else",
+        "while",
+        "end",
+    };
+    return keywords.find(s)!=keywords.end();
+}

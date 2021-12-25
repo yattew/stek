@@ -8,33 +8,32 @@ using namespace std;
 bool is_number(string s);
 //***************************************************
 //***************STATES******************************
-enum STATE
-{
-    NORMAL,
-    IF,
-    ELSE,
-    WHILE,
-    COMPILE_CONDN,
-    COMPILE_BLOCK,
-    VAR,
-};
+
 //**************************************************
 //todo add error handling
-class Interpreter
+struct Interpreter
 {
-public:
-    stack<string> main_stack;
+    enum STATE
+    {
+        NORMAL,
+        IF,
+        ELSE,
+        WHILE,
+        COMPILE_CONDN,
+        COMPILE_BLOCK,
+        VAR,
+    };
+    stack<Object> main_stack;
     stack<pair<STATE, bool>> control_flow_stack;
-    stack<pair<string, string>> while_stack;
+    stack<pair<vector<Object>, vector<Object>>> while_stack;
     unordered_map<string, string> user_words_dictionary;
-    unordered_map<string, string> var_dict;
+    unordered_map<string, Object> var_dict;
     int tokens_count;
     Interpreter() : tokens_count(0)
     {
         control_flow_stack.push(make_pair(NORMAL, true));
     }
-    void interpret(const string s);
-    vector<string> tokenize(const string s);
+    void interpret(const vector<Object> objects);
     void add();
     void subtract();
     void multiply();
@@ -53,7 +52,7 @@ public:
     void _or();
     void _and();
     void _not();
-    bool is_truthy(string token);
+    bool is_truthy(Object obj);
     void less_than();
     void greater_than();
     void equal_to();
@@ -66,123 +65,150 @@ public:
     void val();
 };
 
-void Interpreter::interpret(const string s)
+void Interpreter::interpret(const vector<Object> objects)
 {
-    vector<string> tokens = tokenize(s);
     int idx = 0;
-    while (idx != tokens.size())
+    while (idx != objects.size())
     {
-
-        if (tokens[idx] == "end")
+        Object object = objects[idx];
+        // cout<<object.data<<" ";
+        // idx++;
+        // continue;
+        if (object.type == KEYWORD)
         {
-            _end();
-            idx++;
-            tokens_count++;
-            continue;
-        }
-        else if (tokens[idx] == "do")
-        {
-            _do();
-            idx++;
-            tokens_count++;
-            continue;
-        }
-        else if (inside_compile_condn())
-            while_stack.top().first += tokens[idx] + " ";
-        else if (inside_compile_block())
-            while_stack.top().second += tokens[idx] + " ";
-        if (tokens[idx] == "if")
-            _if();
-        else if (tokens[idx] == "else")
-            _else();
-        else if (tokens[idx] == "while")
-            _while();
-        else
-        {
-            if (control_flow_stack.top().second == true)
+            if (object.data == "end")
             {
-                if (is_number(tokens[idx]))
-                    main_stack.push(tokens[idx]);
-                else if (tokens[idx] == "+")
-                    add();
-                else if (tokens[idx] == "-")
-                    subtract();
-                else if (tokens[idx] == "*")
-                    multiply();
-                else if (tokens[idx] == "/")
-                    divide();
-                else if (tokens[idx] == "%")
-                    remainder();
-                else if (tokens[idx] == "dup")
-                    dup();
-                else if (tokens[idx] == "<")
-                    less_than();
-                else if (tokens[idx] == ">")
-                    greater_than();
-                else if (tokens[idx] == "==")
-                    equal_to();
-                else if (tokens[idx] == "and")
-                    _and();
-                else if (tokens[idx] == "or")
-                    _or();
-                else if (tokens[idx] == "not")
-                    _not();
-                else if (tokens[idx] == "pop")
-                    pop();
-                else if (tokens[idx] == "show")
-                    show();
-                else if (tokens[idx] == "top")
-                    top();
-                else if (tokens[idx] == "clear")
-                    clear();
-                else if (tokens[idx] == "var")
-                    var();
-                else if (control_flow_stack.top().first == VAR)
-                    declare_var(tokens[idx]);
-                else if (tokens[idx] == "set")
-                    set();
-                else if (tokens[idx] == "val")
-                    val();
-                else
+                _end();
+                idx++;
+                tokens_count++;
+                continue;
+            }
+            else if (object.data == "do")
+            {
+                _do();
+                idx++;
+                tokens_count++;
+                continue;
+            }
+            else if (inside_compile_condn())
+            {
+                while_stack.top().first.push_back(object);
+            }
+
+            else if (inside_compile_block())
+            {
+                while_stack.top().second.push_back(object);
+            }
+            if (object.data == "if")
+                _if();
+            else if (object.data == "else")
+                _else();
+            else if (object.data == "while")
+                _while();
+            else
+            {
+                if (control_flow_stack.top().second == true)
                 {
-                    auto it = var_dict.find(tokens[idx]);
-                    if (it != var_dict.end())
-                    {
-                        main_stack.push(tokens[idx]);
-                    }
+                    if (object.data == "+")
+                        add();
+                    else if (object.data == "-")
+                        subtract();
+                    else if (object.data == "*")
+                        multiply();
+                    else if (object.data == "/")
+                        divide();
+                    else if (object.data == "%")
+                        remainder();
+                    else if (object.data == "dup")
+                        dup();
+                    else if (object.data == "<")
+                        less_than();
+                    else if (object.data == ">")
+                        greater_than();
+                    else if (object.data == "==")
+                        equal_to();
+                    else if (object.data == "and")
+                        _and();
+                    else if (object.data == "or")
+                        _or();
+                    else if (object.data == "not")
+                        _not();
+                    else if (object.data == "pop")
+                        pop();
+                    else if (object.data == "show")
+                        show();
+                    else if (object.data == "top")
+                        top();
+                    else if (object.data == "clear")
+                        clear();
+                    else if (object.data == "var")
+                        var();
+                    else if (object.data == "set")
+                        set();
+                    else if (object.data == "val")
+                        val();
                     else
                     {
-                        cout << "undefined word"
-                             << "<" << tokens[idx] << ">" << endl;
+                        auto it = var_dict.find(object.data);
+                        if (it != var_dict.end())
+                        {
+                            main_stack.push(object);
+                        }
+                        else
+                        {
+                            cout << "undefined word"
+                                 << "<" << object.data << ">" << endl;
+                        }
                     }
                 }
             }
         }
+        else
+        {
+            if (inside_compile_condn())
+            {
+                while_stack.top().first.push_back(object);
+                tokens_count++;
+                idx++;
+                continue;
+            }
+
+            else if (inside_compile_block())
+            {
+                while_stack.top().second.push_back(object);
+                tokens_count++;
+                idx++;
+                continue;
+            }
+
+            if (control_flow_stack.top().first == VAR)
+                declare_var(object.data);
+            main_stack.push(object);
+        }
+
         tokens_count++;
         idx++;
     }
 }
 void Interpreter::val()
 {
-    string var = main_stack.top();
+    Object var = main_stack.top();
     main_stack.pop();
-    string data = var_dict[var];
-    if(data.length()>0)
-    {
-        main_stack.push(data);
-    }
+    Object data = var_dict[var.data];
+    main_stack.push(data);
 }
 void Interpreter::set()
 {
-    string var = main_stack.top();
+    Object var = main_stack.top();
     main_stack.pop();
-    string val = main_stack.top();
+    Object val = main_stack.top();
     main_stack.pop();
-    var_dict[var] = val;
+    var_dict[var.data] = val;
 }
 void Interpreter::declare_var(string var)
 {
-    var_dict[var] = "";
+    var_dict[var] = Object();
+    main_stack.pop();
     control_flow_stack.pop();
 }
 void Interpreter::var()
@@ -221,9 +247,7 @@ void Interpreter::_while()
     {
         control_flow_stack.push(make_pair(WHILE, true));
         control_flow_stack.push(make_pair(COMPILE_CONDN, false));
-        string condn;
-        string block;
-        while_stack.push(make_pair(condn, block));
+        while_stack.push(make_pair(vector<Object>(), vector<Object>()));
     }
     else
     {
@@ -234,6 +258,16 @@ void Interpreter::execute_while()
 {
     while (true)
     {
+        // for (auto x : while_stack.top().first)
+        // {
+        //     cout << x.data << " ";
+        // }
+        // cout << endl;
+        // for (auto x : while_stack.top().second)
+        // {
+        //     cout << x.data << " ";
+        // }
+        // break;
         interpret(while_stack.top().first);
         bool check = is_truthy(main_stack.top());
         main_stack.pop();
@@ -271,14 +305,17 @@ void Interpreter::_do()
     if (inside_compile_block() &&
         control_flow_stack.top().first != STATE::COMPILE_BLOCK)
     {
-        while_stack.top().second += "do ";
+        Object object;
+        object.type = KEYWORD;
+        object.data = "do";
+        while_stack.top().second.push_back(object);
         return;
     }
     if (curr_state.second)
     {
-        string token = main_stack.top();
+        Object object = main_stack.top();
         main_stack.pop();
-        if (is_truthy(token))
+        if (is_truthy(object))
         {
             curr_state.second = true;
         }
@@ -316,106 +353,123 @@ void Interpreter::_end()
     if (inside_compile_block() &&
         control_flow_stack.top().first != STATE::COMPILE_BLOCK)
     {
-        while_stack.top().second += "end ";
+        Object obj;
+        obj.type = KEYWORD;
+        obj.data = "end";
+        while_stack.top().second.push_back(obj);
     }
     control_flow_stack.pop();
 }
 
 void Interpreter::_and()
 {
-    string top = main_stack.top();
+    Object top = main_stack.top();
     main_stack.pop();
-    string top2 = main_stack.top();
+    Object top2 = main_stack.top();
     main_stack.pop();
+    Object obj;
+    obj.type = BOOL;
     if (is_truthy(top) && is_truthy(top2))
-        main_stack.push("1");
+    {
+        obj.data = "true";
+        main_stack.push(obj);
+    }
     else
-        main_stack.push("0");
+    {
+        obj.data = "false";
+        main_stack.push(obj);
+    }
 }
 void Interpreter::_or()
 {
-    string top = main_stack.top();
+    Object top = main_stack.top();
     main_stack.pop();
-    string top2 = main_stack.top();
+    Object top2 = main_stack.top();
     main_stack.pop();
+    Object obj;
+    obj.type = BOOL;
     if (is_truthy(top) || is_truthy(top2))
-        main_stack.push("1");
+    {
+        obj.data = "true";
+        main_stack.push(obj);
+    }
     else
-        main_stack.push("0");
+    {
+        obj.data = "false";
+        main_stack.push(obj);
+    }
 }
 void Interpreter::_not()
 {
-    string top = main_stack.top();
+    Object top = main_stack.top();
     main_stack.pop();
+    Object obj;
+    obj.type = BOOL;
     if (is_truthy(top))
-        main_stack.push("0");
-    else
-        main_stack.push("1");
-}
-vector<string> Interpreter::tokenize(const string s)
-{
-    vector<string> tokens;
-    string temp;
-    for (auto x : s)
     {
-        if (x == ' ' || x == '\t' || x == '\n')
-        {
-            if (temp.size() > 0)
-            {
-                tokens.push_back(temp);
-                temp.clear();
-            }
-        }
-        else
-            temp.push_back(x);
+        obj.data = "false";
+        main_stack.push(obj);
     }
-    string temp1;
-    for (auto x : temp)
-        if (x != ' ')
-            temp1.push_back(x);
-    if (temp1.size() > 0)
-        tokens.push_back(temp1);
-    return tokens;
+    else
+    {
+        obj.data = "true";
+        main_stack.push(obj);
+    }
 }
 void Interpreter::add()
 {
-    float top = stof(main_stack.top());
+    float top = stof(main_stack.top().data);
     main_stack.pop();
-    float top1 = stof(main_stack.top());
+    float top1 = stof(main_stack.top().data);
     main_stack.pop();
-    main_stack.push(to_string(top + top1));
+    Object obj;
+    obj.type = NUMBER;
+    obj.data = to_string(top + top1);
+    main_stack.push(obj);
 }
 void Interpreter::subtract()
 {
-    float top = stof(main_stack.top());
+    float top = stof(main_stack.top().data);
     main_stack.pop();
-    float top1 = stof(main_stack.top());
+    float top1 = stof(main_stack.top().data);
     main_stack.pop();
-    main_stack.push(to_string(top1 - top));
+    Object obj;
+    obj.type = NUMBER;
+    obj.data = to_string(top1 - top);
+    main_stack.push(obj);
 }
 void Interpreter::multiply()
 {
-    float top = stof(main_stack.top());
+    float top = stof(main_stack.top().data);
     main_stack.pop();
-    float top1 = stof(main_stack.top());
+    float top1 = stof(main_stack.top().data);
     main_stack.pop();
-    main_stack.push(to_string(top1 * top));
+    Object obj;
+    obj.type = NUMBER;
+    obj.data = to_string(top * top1);
+    main_stack.push(obj);
 }
 void Interpreter::divide()
 {
-    float top = stof(main_stack.top());
+    float top = stof(main_stack.top().data);
     main_stack.pop();
-    float top1 = stof(main_stack.top());
+    float top1 = stof(main_stack.top().data);
     main_stack.pop();
-    main_stack.push(to_string(top1 / top));
+    Object obj;
+    obj.type = NUMBER;
+    obj.data = to_string(top1 / top);
+    main_stack.push(obj);
 }
 void Interpreter::remainder()
 {
-    int top = stoi(main_stack.top());
+    int top = stoi(main_stack.top().data);
     main_stack.pop();
-    int top1 = stoi(main_stack.top());
+    int top1 = stoi(main_stack.top().data);
     main_stack.pop();
-    main_stack.push(to_string(top1 % top));
+    Object obj;
+    obj.type = NUMBER;
+    obj.data = to_string(top1 % top);
+    main_stack.push(obj);
 }
 void Interpreter::dup()
 {
@@ -423,14 +477,7 @@ void Interpreter::dup()
 }
 void Interpreter::top()
 {
-    if (is_number(main_stack.top()))
-    {
-        cout << stof(main_stack.top()) << endl;
-    }
-    else
-    {
-        cout << main_stack.top() << endl;
-    }
+    cout << main_stack.top().data;
 }
 void Interpreter::pop()
 {
@@ -438,8 +485,8 @@ void Interpreter::pop()
 }
 void Interpreter::show()
 {
-    stack<string> temp = main_stack;
-    stack<string> helper;
+    stack<Object> temp = main_stack;
+    stack<Object> helper;
     while (!temp.empty())
     {
         helper.push(temp.top());
@@ -448,62 +495,84 @@ void Interpreter::show()
     cout << "<" << helper.size() << "> ";
     while (!helper.empty())
     {
-        string tkn = helper.top();
+        Object obj = helper.top();
         helper.pop();
-        if (is_number(tkn))
-        {
-            cout << stof(tkn) << " ";
-        }
-        else
-        {
-            cout << tkn << " ";
-        }
+        cout << obj.data << " ";
     }
     cout << endl;
 }
 void Interpreter::less_than()
 {
-    float top = stof(main_stack.top());
+    float top = stof(main_stack.top().data);
     main_stack.pop();
-    float top1 = stof(main_stack.top());
+    float top1 = stof(main_stack.top().data);
     main_stack.pop();
+    Object obj;
+    obj.type = BOOL;
     if (top1 < top)
-        main_stack.push("1");
+    {
+        obj.data = "true";
+        main_stack.push(obj);
+    }
     else
-        main_stack.push("0");
+    {
+        obj.data = "false";
+        main_stack.push(obj);
+    }
 }
 void Interpreter::greater_than()
 {
-    float top = stof(main_stack.top());
+    float top = stof(main_stack.top().data);
     main_stack.pop();
-    float top1 = stof(main_stack.top());
+    float top1 = stof(main_stack.top().data);
     main_stack.pop();
+    Object obj;
+    obj.type = BOOL;
     if (top1 > top)
-        main_stack.push("1");
+    {
+        obj.data = "true";
+        main_stack.push(obj);
+    }
     else
-        main_stack.push("0");
+    {
+        obj.data = "false";
+        main_stack.push(obj);
+    }
 }
 void Interpreter::equal_to()
 {
-    float top = stof(main_stack.top());
+    float top = stof(main_stack.top().data);
     main_stack.pop();
-    float top1 = stof(main_stack.top());
+    float top1 = stof(main_stack.top().data);
     main_stack.pop();
-    if (abs(top1 - top) < FLOAT_THRESHOLD)
-        main_stack.push("1");
+    Object obj;
+    obj.type = BOOL;
+    if (top1 == top)
+    {
+        obj.data = "true";
+        main_stack.push(obj);
+    }
     else
-        main_stack.push("0");
+    {
+        obj.data = "false";
+        main_stack.push(obj);
+    }
 }
-bool Interpreter::is_truthy(string token)
+bool Interpreter::is_truthy(Object obj)
 {
     bool flag = false;
-    if (is_number)
+    if (obj.type == NUMBER)
     {
-        float num = stof(token);
+        float num = stof(obj.data);
         if (num != 0)
             flag = true;
     }
-    else if (token.length() > 0)
+    else if (obj.type == BOOL)
+    {
+        if (obj.data == "true")
+            flag = true;
+    }
+    else if (obj.data.length() > 0)
         flag = true;
     return flag;
 }
