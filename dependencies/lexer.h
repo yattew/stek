@@ -25,6 +25,12 @@ struct Lexer
             object.type = KEYWORD;
             object.data = word;
         }
+        else if (is_string(word))
+        {
+            object.type = STRING;
+            string s = string(++word.begin(), --word.end());
+            object.data = s;
+        }
         else
         {
             object.type = _NULL;
@@ -36,9 +42,27 @@ struct Lexer
     {
         vector<Object> objects;
         string temp;
-        for (auto x : text)
+        bool is_string = false;
+        for (auto it = text.begin(); it < text.end(); it++)
         {
-            if (x == ' ' || x == '\t' || x == '\n' || x == '\0')
+            if (*it == '"')
+            {
+                temp.clear();
+                temp.push_back(*it);
+                it++;
+                while (*it != '"')
+                {
+                    temp.push_back(*it);
+                    it++;
+                }
+                temp.push_back(*it);
+                it++;
+                Object object = make_object(temp);
+                objects.push_back(object);
+                temp.clear();
+                continue;
+            }
+            if (*it == ' ' || *it == '\t' || *it == '\n' || *it == '\0')
             {
                 if (temp.size() > 0)
                 {
@@ -49,7 +73,7 @@ struct Lexer
             }
             else
             {
-                temp.push_back(x);
+                temp.push_back(*it);
             }
         }
         string temp1;

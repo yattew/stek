@@ -47,6 +47,11 @@ bool is_keyword(string s)
         "else",
         "while",
         "end",
+        "\\n"
     };
     return keywords.find(s)!=keywords.end();
+}
+bool is_string(string word)
+{
+    return *word.begin() == '"' && *(--word.end()) == '"';
 }

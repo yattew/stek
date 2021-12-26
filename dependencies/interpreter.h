@@ -71,9 +71,6 @@ void Interpreter::interpret(const vector<Object> objects)
     while (idx != objects.size())
     {
         Object object = objects[idx];
-        // cout<<object.data<<" ";
-        // idx++;
-        // continue;
         if (object.type == KEYWORD)
         {
             if (object.data == "end")
@@ -142,11 +139,17 @@ void Interpreter::interpret(const vector<Object> objects)
                     else if (object.data == "clear")
                         clear();
                     else if (object.data == "var")
+                    {
                         var();
+                    }
                     else if (object.data == "set")
                         set();
                     else if (object.data == "val")
                         val();
+                    else if (object.data == "\\n")
+                    {
+                        cout << endl;
+                    }
                     else
                     {
                         auto it = var_dict.find(object.data);
@@ -180,10 +183,11 @@ void Interpreter::interpret(const vector<Object> objects)
                 idx++;
                 continue;
             }
-
-            if (control_flow_stack.top().first == VAR)
-                declare_var(object.data);
             main_stack.push(object);
+            if (control_flow_stack.top().first == VAR)
+            {
+                declare_var(object.data);
+            }
         }
 
         tokens_count++;
@@ -207,6 +211,7 @@ void Interpreter::set()
 }
 void Interpreter::declare_var(string var)
 {
+
     var_dict[var] = Object();
     main_stack.pop();
     control_flow_stack.pop();
@@ -477,7 +482,15 @@ void Interpreter::dup()
 }
 void Interpreter::top()
 {
-    cout << main_stack.top().data;
+    Object obj = main_stack.top();
+    if (obj.type == NUMBER)
+    {
+        cout << stof(obj.data);
+    }
+    else
+    {
+        cout << obj.data;
+    }
 }
 void Interpreter::pop()
 {
@@ -497,7 +510,15 @@ void Interpreter::show()
     {
         Object obj = helper.top();
         helper.pop();
-        cout << obj.data << " ";
+        if (obj.type == NUMBER)
+        {
+            cout << stof(obj.data);
+        }
+        else
+        {
+            cout << obj.data;
+        }
+        cout<<" ";
     }
     cout << endl;
 }
