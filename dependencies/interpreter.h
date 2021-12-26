@@ -7,9 +7,6 @@ using namespace std;
 //**************forward declarations*****************
 bool is_number(string s);
 //***************************************************
-//***************STATES******************************
-
-//**************************************************
 //todo add error handling
 struct Interpreter
 {
@@ -63,6 +60,7 @@ struct Interpreter
     void declare_var(string var);
     void set();
     void val();
+    void print();
 };
 
 void Interpreter::interpret(const vector<Object> objects)
@@ -146,6 +144,10 @@ void Interpreter::interpret(const vector<Object> objects)
                         set();
                     else if (object.data == "val")
                         val();
+                    else if(object.data == "print")
+                    {
+                        print();
+                    }
                     else if (object.data == "\\n")
                     {
                         cout << endl;
@@ -192,6 +194,19 @@ void Interpreter::interpret(const vector<Object> objects)
 
         tokens_count++;
         idx++;
+    }
+}
+void Interpreter::print()
+{
+    Object obj = main_stack.top();
+    main_stack.pop();
+    if (obj.type == NUMBER)
+    {
+        cout << stof(obj.data);
+    }
+    else
+    {
+        cout << obj.data;
     }
 }
 void Interpreter::val()
@@ -263,16 +278,6 @@ void Interpreter::execute_while()
 {
     while (true)
     {
-        // for (auto x : while_stack.top().first)
-        // {
-        //     cout << x.data << " ";
-        // }
-        // cout << endl;
-        // for (auto x : while_stack.top().second)
-        // {
-        //     cout << x.data << " ";
-        // }
-        // break;
         interpret(while_stack.top().first);
         bool check = is_truthy(main_stack.top());
         main_stack.pop();
@@ -514,11 +519,17 @@ void Interpreter::show()
         {
             cout << stof(obj.data);
         }
+        else if (obj.type == STRING)
+        {
+            cout << "\"";
+            cout << obj.data;
+            cout << "\"";
+        }
         else
         {
             cout << obj.data;
         }
-        cout<<" ";
+        cout << " ";
     }
     cout << endl;
 }

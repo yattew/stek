@@ -22,33 +22,6 @@ bool is_bool(string s)
 }
 bool is_keyword(string s)
 {
-    unordered_set<string> keywords = {
-        "+",
-        "-",
-        "*",
-        "/",
-        "%",
-        "dup",
-        "<",
-        ">",
-        "==",
-        "and",
-        "or",
-        "not",
-        "pop",
-        "show",
-        "top",
-        "clear",
-        "var",
-        "set",
-        "val",
-        "if",
-        "do",
-        "else",
-        "while",
-        "end",
-        "\\n"
-    };
     return keywords.find(s)!=keywords.end();
 }
 bool is_string(string word)
