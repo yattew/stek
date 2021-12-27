@@ -21,3 +21,11 @@ function test do
         top \n
     end
 end
+####################
+#case 5
+10
+function test do
+    if 1 - dup do
+        top \n test
+    end
+end
