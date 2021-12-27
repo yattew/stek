@@ -1,6 +1,6 @@
 #include <bits/stdc++.h>
-#include "dependencies/keywords.h"
-#include "dependencies/helper_functions.h"
-#include "dependencies/object.h"
-#include "dependencies/lexer.h"
-#include "dependencies/interpreter.h"
+#include "src/keywords.h"
+#include "src/helper_functions.h"
+#include "src/object.h"
+#include "src/lexer.h"
+#include "src/interpreter.h"

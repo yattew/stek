@@ -19,12 +19,15 @@ struct Interpreter
         COMPILE_CONDN,
         COMPILE_BLOCK,
         VAR,
+        FUNCTION,
+        COMPILE_FUNCTION,
     };
     stack<Object> main_stack;
     stack<pair<STATE, bool>> control_flow_stack;
     stack<pair<vector<Object>, vector<Object>>> while_stack;
-    unordered_map<string, string> user_words_dictionary;
+    unordered_map<string, vector<Object>> function_dict;
     unordered_map<string, Object> var_dict;
+    string current_function_name;
     int tokens_count;
     Interpreter() : tokens_count(0)
     {
@@ -61,6 +64,9 @@ struct Interpreter
     void set();
     void val();
     void print();
+    void function();
+    bool inside_function_block();
+    void exec_function(string name);
 };
 
 void Interpreter::interpret(const vector<Object> objects)
@@ -94,12 +100,20 @@ void Interpreter::interpret(const vector<Object> objects)
             {
                 while_stack.top().second.push_back(object);
             }
+            else if (inside_function_block())
+            {
+                function_dict[current_function_name].push_back(object);
+            }
             if (object.data == "if")
                 _if();
             else if (object.data == "else")
                 _else();
             else if (object.data == "while")
                 _while();
+            else if (object.data == "function")
+            {
+                function();
+            }
             else
             {
                 if (control_flow_stack.top().second == true)
@@ -144,7 +158,7 @@ void Interpreter::interpret(const vector<Object> objects)
                         set();
                     else if (object.data == "val")
                         val();
-                    else if(object.data == "print")
+                    else if (object.data == "print")
                     {
                         print();
                     }
@@ -170,6 +184,13 @@ void Interpreter::interpret(const vector<Object> objects)
         }
         else
         {
+            if (control_flow_stack.top().first == FUNCTION)
+            {
+                current_function_name = object.data;
+                tokens_count++;
+                idx++;
+                continue;
+            }
             if (inside_compile_condn())
             {
                 while_stack.top().first.push_back(object);
@@ -185,16 +206,47 @@ void Interpreter::interpret(const vector<Object> objects)
                 idx++;
                 continue;
             }
-            main_stack.push(object);
-            if (control_flow_stack.top().first == VAR)
+            else if (inside_function_block())
             {
-                declare_var(object.data);
+                function_dict[current_function_name].push_back(object);
+                tokens_count++;
+                idx++;
+                continue;
+            }
+            else if (function_dict.find(object.data) != function_dict.end())
+            {
+                exec_function(object.data);
+                tokens_count++;
+                idx++;
+                continue;
+            }
+            // else{
+            //     cout<<"here"<<endl;
+            // }
+            if (control_flow_stack.top().second == true)
+            {
+                main_stack.push(object);
+                if (control_flow_stack.top().first == VAR)
+                {
+                    declare_var(object.data);
+                }
             }
         }
-
         tokens_count++;
         idx++;
     }
+}
+void Interpreter::function()
+{
+    control_flow_stack.push(make_pair(FUNCTION, false));
+}
+void Interpreter::exec_function(string name)
+{
+    vector<Object> function_body = function_dict[name];
+    // for(auto x: function_body) cout<<x.data<<" ";
+    // cout<<endl;
+    interpret(function_body);
+    // cout << "function called with name = " << name << endl;
 }
 void Interpreter::print()
 {
@@ -301,19 +353,50 @@ void Interpreter::_if()
     }
     control_flow_stack.push(make_pair(IF, this_block));
 }
-
+bool Interpreter::inside_function_block()
+{
+    stack<pair<STATE, bool>> st_cp = control_flow_stack;
+    while (!st_cp.empty())
+    {
+        if (st_cp.top().first == STATE::COMPILE_FUNCTION)
+        {
+            return true;
+        }
+        st_cp.pop();
+    }
+    return false;
+}
 void Interpreter::_do()
 {
     pair<STATE, bool> &curr_state = control_flow_stack.top();
+    //for handling the function <name> do portion of a function declaration
+    if (curr_state.first == FUNCTION)
+    {
+        control_flow_stack.push(make_pair(COMPILE_FUNCTION, false));
+        function_dict[current_function_name] = vector<Object>();
+        return;
+    }
+    // for handling the case when we encounter a do inside a function declaration
+    if (inside_function_block())
+    {
+        Object object;
+        object.type = KEYWORD;
+        object.data = "do";
+        function_dict[current_function_name].push_back(object);
+        return;
+    }
+    //for handling the while .... do portion of the while loop
     if (curr_state.first == COMPILE_CONDN)
     {
         control_flow_stack.pop();
         control_flow_stack.push(make_pair(COMPILE_BLOCK, false));
-
         return;
     }
+    //for handling the do .... end portion of the while loop when there is a nested
+    //if or while block inside a while block durin the compilation of the while block
     if (inside_compile_block() &&
-        control_flow_stack.top().first != STATE::COMPILE_BLOCK)
+        control_flow_stack.top().first != STATE::COMPILE_BLOCK) //remove the second condition and check
+
     {
         Object object;
         object.type = KEYWORD;
@@ -321,6 +404,7 @@ void Interpreter::_do()
         while_stack.top().second.push_back(object);
         return;
     }
+    //for handling simple if ... do ... else ... end statements
     if (curr_state.second)
     {
         Object object = main_stack.top();
@@ -352,6 +436,20 @@ void Interpreter::_else()
 }
 void Interpreter::_end()
 {
+    if (control_flow_stack.top().first == COMPILE_FUNCTION)
+    {
+        control_flow_stack.pop();
+        current_function_name.clear();
+    }
+    else if(inside_function_block())
+    {
+        Object obj;
+        obj.type = KEYWORD;
+        obj.data = "end";
+        function_dict[current_function_name].push_back(obj);
+        control_flow_stack.pop();
+        return;
+    }
     if (control_flow_stack.top().first == STATE::COMPILE_BLOCK)
     {
         control_flow_stack.pop();

@@ -25,4 +25,5 @@ unordered_set<string> keywords = {
     "while",
     "end",
     "print",
+    "function",
     "\\n"};

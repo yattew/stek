@@ -1,0 +1,23 @@
+#case 1
+function test do
+    1 2
+end
+
+#case 2
+function test do
+    "hello world" print
+end
+
+#case 3
+function test do
+    if 1 do
+        1 print
+    end
+end
+
+#case 4
+function test do
+    10 while 1 - dup do
+        top \n
+    end
+end

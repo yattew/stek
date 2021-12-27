@@ -1,6 +1,8 @@
-0 while 1 + dup 10 == not do
-    if dup 2 % 0 == do
-        top
+function evens do
+    0 while 1 + dup 11 == not do
+        if dup 2 % 0 == do
+            top \n
+        end
     end
+    clear
 end
-clear
