@@ -5,3 +5,32 @@ end
 function println do
     top pop \n
 end
+
+function ++ do
+    1 +
+end
+
+function -- do
+    1 - 
+end
+
+function factorial do
+    var num
+    var res
+    ++ num set
+    1 res set
+    while num val -- num set num val do
+        num val 
+        res val
+        *
+        res set
+    end
+    res val
+end
+
+function pow do
+    while -- dup do
+        swap dup * swap
+    end
+    pop
+end

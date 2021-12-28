@@ -68,6 +68,7 @@ struct Interpreter
     void exec_function(string name);
     void print_control_flow_stack();
     void include();
+    void swap();
 };
 
 void Interpreter::interpret(const vector<Object> objects)
@@ -156,29 +157,16 @@ void Interpreter::interpret(const vector<Object> objects)
                     else if (object.data == "clear")
                         clear();
                     else if (object.data == "var")
-                    {
                         var();
-                    }
                     else if (object.data == "set")
                         set();
                     else if (object.data == "val")
                         val();
                     else if (object.data == "\\n")
-                    {
                         cout << endl;
-                    }
-                    else
+                    else if(object.data == "swap")
                     {
-                        auto it = var_dict.find(object.data);
-                        if (it != var_dict.end())
-                        {
-                            main_stack.push(object);
-                        }
-                        else
-                        {
-                            cout << "undefined word"
-                                 << "<" << object.data << ">" << endl;
-                        }
+                        swap();
                     }
                 }
             }
@@ -234,6 +222,17 @@ void Interpreter::interpret(const vector<Object> objects)
         idx++;
     }
 }
+
+void Interpreter::swap()
+{
+    Object top1 = main_stack.top();
+    main_stack.pop();
+    Object top2 = main_stack.top();
+    main_stack.pop();
+    main_stack.push(top1);
+    main_stack.push(top2);
+}
+
 
 void Interpreter::include()
 {
