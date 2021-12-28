@@ -63,29 +63,13 @@ struct Interpreter
     void declare_var(string var);
     void set();
     void val();
-    void print();
     void function();
     bool inside_function_block();
     void exec_function(string name);
     void print_control_flow_stack();
+    void include();
 };
-void Interpreter::print_control_flow_stack()
-{
-    stack<pair<STATE,bool>> cfs_cpy = control_flow_stack;
-    stack<pair<STATE,bool>> cfs_cpy1;
-    while(!cfs_cpy.empty())
-    {
-        cfs_cpy1.push(cfs_cpy.top());
-        cfs_cpy.pop();
-    }
-    while(!cfs_cpy1.empty())
-    {
-        cout<<"<"<<"state :"<<cfs_cpy1.top().first<<", "<<"status: "<<cfs_cpy1.top().second
-        <<">"<<" ";
-        cfs_cpy1.pop();
-    }
-    cout<<endl;
-}
+
 void Interpreter::interpret(const vector<Object> objects)
 {
     int idx = 0;
@@ -131,6 +115,10 @@ void Interpreter::interpret(const vector<Object> objects)
             {
                 function();
             }
+            else if (object.data == "include")
+            {
+                include();
+            }
             else
             {
                 if (control_flow_stack.top().second == true)
@@ -175,10 +163,6 @@ void Interpreter::interpret(const vector<Object> objects)
                         set();
                     else if (object.data == "val")
                         val();
-                    else if (object.data == "print")
-                    {
-                        print();
-                    }
                     else if (object.data == "\\n")
                     {
                         cout << endl;
@@ -250,6 +234,22 @@ void Interpreter::interpret(const vector<Object> objects)
         idx++;
     }
 }
+
+void Interpreter::include()
+{
+    string name = main_stack.top().data;
+    Lexer L;
+    main_stack.pop();
+    ifstream file(name);
+    string temp;
+    string all;
+    while (getline(file, temp))
+    {
+        vector<Object> objects = L.tokenize(temp);
+        interpret(objects);
+    }
+}
+
 //********************* functions ********************
 //when the function keyword is encountered
 void Interpreter::function()
@@ -472,19 +472,7 @@ void Interpreter::declare_var(string var)
     control_flow_stack.pop();
 }
 //**********************************************************************
-void Interpreter::print()
-{
-    Object obj = main_stack.top();
-    main_stack.pop();
-    if (obj.type == NUMBER)
-    {
-        cout << stof(obj.data);
-    }
-    else
-    {
-        cout << obj.data;
-    }
-}
+
 void Interpreter::val()
 {
     Object var = main_stack.top();
@@ -742,4 +730,24 @@ void Interpreter::clear()
 {
     while (!main_stack.empty())
         main_stack.pop();
+}
+void Interpreter::print_control_flow_stack()
+{
+    stack<pair<STATE, bool>> cfs_cpy = control_flow_stack;
+    stack<pair<STATE, bool>> cfs_cpy1;
+    while (!cfs_cpy.empty())
+    {
+        cfs_cpy1.push(cfs_cpy.top());
+        cfs_cpy.pop();
+    }
+    while (!cfs_cpy1.empty())
+    {
+        cout << "<"
+             << "state :" << cfs_cpy1.top().first << ", "
+             << "status: " << cfs_cpy1.top().second
+             << ">"
+             << " ";
+        cfs_cpy1.pop();
+    }
+    cout << endl;
 }

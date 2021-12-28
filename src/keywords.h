@@ -26,4 +26,5 @@ unordered_set<string> keywords = {
     "end",
     "print",
     "function",
+    "include",
     "\\n"};
