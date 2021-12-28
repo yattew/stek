@@ -1,3 +1,4 @@
+"std.stek" include
 0 while 1 + dup 11 < do
     5 print
     " x " print

@@ -24,7 +24,6 @@ unordered_set<string> keywords = {
     "else",
     "while",
     "end",
-    "print",
     "function",
     "include",
     "\\n"};
