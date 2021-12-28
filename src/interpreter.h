@@ -67,8 +67,25 @@ struct Interpreter
     void function();
     bool inside_function_block();
     void exec_function(string name);
+    void print_control_flow_stack();
 };
-
+void Interpreter::print_control_flow_stack()
+{
+    stack<pair<STATE,bool>> cfs_cpy = control_flow_stack;
+    stack<pair<STATE,bool>> cfs_cpy1;
+    while(!cfs_cpy.empty())
+    {
+        cfs_cpy1.push(cfs_cpy.top());
+        cfs_cpy.pop();
+    }
+    while(!cfs_cpy1.empty())
+    {
+        cout<<"<"<<"state :"<<cfs_cpy1.top().first<<", "<<"status: "<<cfs_cpy1.top().second
+        <<">"<<" ";
+        cfs_cpy1.pop();
+    }
+    cout<<endl;
+}
 void Interpreter::interpret(const vector<Object> objects)
 {
     int idx = 0;
@@ -213,16 +230,13 @@ void Interpreter::interpret(const vector<Object> objects)
                 idx++;
                 continue;
             }
-            else if (function_dict.find(object.data) != function_dict.end())
+            else if (control_flow_stack.top().second == true && function_dict.find(object.data) != function_dict.end())
             {
                 exec_function(object.data);
                 tokens_count++;
                 idx++;
                 continue;
             }
-            // else{
-            //     cout<<"here"<<endl;
-            // }
             if (control_flow_stack.top().second == true)
             {
                 main_stack.push(object);
@@ -236,56 +250,78 @@ void Interpreter::interpret(const vector<Object> objects)
         idx++;
     }
 }
+//********************* functions ********************
+//when the function keyword is encountered
 void Interpreter::function()
 {
     control_flow_stack.push(make_pair(FUNCTION, false));
 }
+//for storing the body of the function
+//after the do keyword everything is a part of the function
+bool Interpreter::inside_function_block()
+{
+    stack<pair<STATE, bool>> st_cp = control_flow_stack;
+    while (!st_cp.empty())
+    {
+        if (st_cp.top().first == STATE::COMPILE_FUNCTION)
+        {
+            return true;
+        }
+        st_cp.pop();
+    }
+    return false;
+}
+//execute the function
 void Interpreter::exec_function(string name)
 {
     vector<Object> function_body = function_dict[name];
-    // for(auto x: function_body) cout<<x.data<<" ";
-    // cout<<endl;
     interpret(function_body);
-    // cout << "function called with name = " << name << endl;
 }
-void Interpreter::print()
+//********************************************************************
+
+//**********************if else block***********************************
+//check if the if condition can be executed, if yes then execute
+void Interpreter::_if()
 {
-    Object obj = main_stack.top();
-    main_stack.pop();
-    if (obj.type == NUMBER)
+    bool this_block = true;
+    if (control_flow_stack.top().second == false)
     {
-        cout << stof(obj.data);
+        this_block = false;
+    }
+    control_flow_stack.push(make_pair(IF, this_block));
+}
+//when the else keyword is encountered, if the previous state is true and the current state is false
+//i.e the if block did not execute then set the new state aka the state of the else block to be true
+void Interpreter::_else()
+{
+    pair<STATE, bool> curr_state = control_flow_stack.top();
+    control_flow_stack.pop();
+    pair<STATE, bool> prev_state = control_flow_stack.top();
+    pair<STATE, bool> new_state = make_pair(ELSE, false);
+    if (prev_state.second)
+    {
+        if (curr_state.second == false)
+        {
+            new_state.second = true;
+        }
+    }
+    control_flow_stack.push(new_state);
+}
+//**********************************************************************
+
+//************************ while block *********************************
+void Interpreter::_while()
+{
+    if (control_flow_stack.top().second == true)
+    {
+        control_flow_stack.push(make_pair(WHILE, true));
+        control_flow_stack.push(make_pair(COMPILE_CONDN, false));
+        while_stack.push(make_pair(vector<Object>(), vector<Object>()));
     }
     else
     {
-        cout << obj.data;
+        control_flow_stack.push(make_pair(WHILE, false));
     }
-}
-void Interpreter::val()
-{
-    Object var = main_stack.top();
-    main_stack.pop();
-    Object data = var_dict[var.data];
-    main_stack.push(data);
-}
-void Interpreter::set()
-{
-    Object var = main_stack.top();
-    main_stack.pop();
-    Object val = main_stack.top();
-    main_stack.pop();
-    var_dict[var.data] = val;
-}
-void Interpreter::declare_var(string var)
-{
-
-    var_dict[var] = Object();
-    main_stack.pop();
-    control_flow_stack.pop();
-}
-void Interpreter::var()
-{
-    control_flow_stack.push(make_pair(VAR, true));
 }
 bool Interpreter::inside_compile_condn()
 {
@@ -313,19 +349,6 @@ bool Interpreter::inside_compile_block()
     }
     return false;
 }
-void Interpreter::_while()
-{
-    if (control_flow_stack.top().second == true)
-    {
-        control_flow_stack.push(make_pair(WHILE, true));
-        control_flow_stack.push(make_pair(COMPILE_CONDN, false));
-        while_stack.push(make_pair(vector<Object>(), vector<Object>()));
-    }
-    else
-    {
-        control_flow_stack.push(make_pair(WHILE, false));
-    }
-}
 void Interpreter::execute_while()
 {
     while (true)
@@ -344,28 +367,9 @@ void Interpreter::execute_while()
     }
     while_stack.pop();
 }
-void Interpreter::_if()
-{
-    bool this_block = true;
-    if (control_flow_stack.top().second == false)
-    {
-        this_block = false;
-    }
-    control_flow_stack.push(make_pair(IF, this_block));
-}
-bool Interpreter::inside_function_block()
-{
-    stack<pair<STATE, bool>> st_cp = control_flow_stack;
-    while (!st_cp.empty())
-    {
-        if (st_cp.top().first == STATE::COMPILE_FUNCTION)
-        {
-            return true;
-        }
-        st_cp.pop();
-    }
-    return false;
-}
+//**********************************************************************
+
+//************************ other control flow handlers *****************
 void Interpreter::_do()
 {
     pair<STATE, bool> &curr_state = control_flow_stack.top();
@@ -419,21 +423,6 @@ void Interpreter::_do()
         }
     }
 }
-void Interpreter::_else()
-{
-    pair<STATE, bool> curr_state = control_flow_stack.top();
-    control_flow_stack.pop();
-    pair<STATE, bool> prev_state = control_flow_stack.top();
-    pair<STATE, bool> new_state = make_pair(ELSE, false);
-    if (prev_state.second)
-    {
-        if (curr_state.second == false)
-        {
-            new_state.second = true;
-        }
-    }
-    control_flow_stack.push(new_state);
-}
 void Interpreter::_end()
 {
     if (control_flow_stack.top().first == COMPILE_FUNCTION)
@@ -441,7 +430,7 @@ void Interpreter::_end()
         control_flow_stack.pop();
         current_function_name.clear();
     }
-    else if(inside_function_block())
+    else if (inside_function_block())
     {
         Object obj;
         obj.type = KEYWORD;
@@ -467,6 +456,49 @@ void Interpreter::_end()
         while_stack.top().second.push_back(obj);
     }
     control_flow_stack.pop();
+}
+//**********************************************************************
+
+//******************************* var **********************************
+void Interpreter::var()
+{
+    control_flow_stack.push(make_pair(VAR, true));
+}
+void Interpreter::declare_var(string var)
+{
+
+    var_dict[var] = Object();
+    main_stack.pop();
+    control_flow_stack.pop();
+}
+//**********************************************************************
+void Interpreter::print()
+{
+    Object obj = main_stack.top();
+    main_stack.pop();
+    if (obj.type == NUMBER)
+    {
+        cout << stof(obj.data);
+    }
+    else
+    {
+        cout << obj.data;
+    }
+}
+void Interpreter::val()
+{
+    Object var = main_stack.top();
+    main_stack.pop();
+    Object data = var_dict[var.data];
+    main_stack.push(data);
+}
+void Interpreter::set()
+{
+    Object var = main_stack.top();
+    main_stack.pop();
+    Object val = main_stack.top();
+    main_stack.pop();
+    var_dict[var.data] = val;
 }
 
 void Interpreter::_and()
