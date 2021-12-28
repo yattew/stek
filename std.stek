@@ -1,0 +1,7 @@
+function print do
+    top pop
+end
+
+function println do
+    top pop \n
+end
