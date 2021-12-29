@@ -15,8 +15,7 @@ function -- do
 end
 
 function factorial do
-    var num
-    var res
+    var num var res
     ++ num set
     1 res set
     while num val -- num set num val do
@@ -26,6 +25,7 @@ function factorial do
         res set
     end
     res val
+    null null num set res set
 end
 
 function pow do
@@ -33,4 +33,26 @@ function pow do
         swap dup * swap
     end
     pop
+end
+
+function <= do
+    var t1 var t2
+    t1 set t2 set
+    if t2 val t1 val < t2 val t1 val == or do
+        1
+    else
+        0
+    end
+    null null t1 set t2 set
+end
+
+function >= do
+    var t1 var t2
+    t1 set t2 set
+    if t2 val t1 val > t2 val t1 val == or do
+        1
+    else
+        0
+    end
+    null null t1 set t2 set
 end

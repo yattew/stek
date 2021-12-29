@@ -15,6 +15,6 @@ struct Object
     Object()
     {
         type = _NULL;
-        data = "";
+        data = "null";
     }
 };

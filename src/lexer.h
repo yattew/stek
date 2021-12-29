@@ -31,6 +31,11 @@ struct Lexer
             string s = string(++word.begin(), --word.end());
             object.data = s;
         }
+        else if(is_null(word))
+        {
+            object.type = _NULL;
+            object.data = "null";
+        }
         else
         {
             object.type = _NULL;

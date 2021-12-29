@@ -28,3 +28,7 @@ bool is_string(string word)
 {
     return *word.begin() == '"' && *(--word.end()) == '"';
 }
+bool is_null(string word)
+{
+    return word == "null";
+}

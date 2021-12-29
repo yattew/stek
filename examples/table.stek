@@ -1,9 +1,14 @@
 "std.stek" include
-0 while 1 + dup 11 < do
-    5 print
-    " x " print
-    top
-    " = " print
-    dup 5 * print
-    \n
+function table do
+    var num
+    num set
+    0 while ++ dup 11 < do
+        num val print
+        " x " print
+        top
+        " = " print
+        dup num val * println
+    end pop
+    null num set
 end
+5 table

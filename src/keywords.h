@@ -27,4 +27,5 @@ unordered_set<string> keywords = {
     "function",
     "include",
     "swap",
+    "typeof",
     "\\n"};

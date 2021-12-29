@@ -69,6 +69,7 @@ struct Interpreter
     void print_control_flow_stack();
     void include();
     void swap();
+    void _typeof();
 };
 
 void Interpreter::interpret(const vector<Object> objects)
@@ -168,6 +169,10 @@ void Interpreter::interpret(const vector<Object> objects)
                     {
                         swap();
                     }
+                    else if(object.data == "typeof")
+                    {
+                        _typeof();
+                    }
                 }
             }
         }
@@ -221,6 +226,36 @@ void Interpreter::interpret(const vector<Object> objects)
         tokens_count++;
         idx++;
     }
+}
+
+void Interpreter::_typeof()
+{
+    Object obj = main_stack.top();
+    main_stack.pop();
+    Object res;
+    res.type = STRING;
+    switch(obj.type)
+    {
+        case BOOL:
+            res.data = "bool";
+            break;
+        case NUMBER:
+            res.data = "number";
+            break;
+        case STRING:
+            res.data = "string";
+            break;
+        case ARRAY:
+            res.data = "array";
+            break;
+        case _NULL:
+            res.data = "null";
+            break;
+        default:
+            res.data = "keyword";
+            break;
+    }
+    main_stack.push(res);
 }
 
 void Interpreter::swap()
@@ -690,13 +725,13 @@ void Interpreter::greater_than()
 }
 void Interpreter::equal_to()
 {
-    float top = stof(main_stack.top().data);
+    Object top = main_stack.top();
     main_stack.pop();
-    float top1 = stof(main_stack.top().data);
+    Object top1 = main_stack.top();
     main_stack.pop();
     Object obj;
     obj.type = BOOL;
-    if (top1 == top)
+    if (top1.data == top.data)
     {
         obj.data = "true";
         main_stack.push(obj);
@@ -720,6 +755,10 @@ bool Interpreter::is_truthy(Object obj)
     {
         if (obj.data == "true")
             flag = true;
+    }
+    else if(obj.type == _NULL)
+    {
+        flag = false;
     }
     else if (obj.data.length() > 0)
         flag = true;
