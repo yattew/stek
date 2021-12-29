@@ -3,7 +3,7 @@
 ## Introduction
  This is a stack oriented interpreted programming language inspired by forth and written in c++.
  The language is dynamically typed so there are minimum restrictions on the programmer.
- You may store your code written in sloth with a .sloth extension.
+ You may store your code written in stek with a .stek extension.
  
 ## How does it work?
 - There is main stack which you use for manuplating your data
