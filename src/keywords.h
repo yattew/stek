@@ -28,4 +28,6 @@ unordered_set<string> keywords = {
     "include",
     "swap",
     "typeof",
+    "strlen",
+    "at",
     "\\n"};

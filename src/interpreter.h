@@ -70,6 +70,8 @@ struct Interpreter
     void include();
     void swap();
     void _typeof();
+    void _strlen();
+    void at();
 };
 
 void Interpreter::interpret(const vector<Object> objects)
@@ -165,14 +167,14 @@ void Interpreter::interpret(const vector<Object> objects)
                         val();
                     else if (object.data == "\\n")
                         cout << endl;
-                    else if(object.data == "swap")
-                    {
+                    else if (object.data == "swap")
                         swap();
-                    }
-                    else if(object.data == "typeof")
-                    {
+                    else if (object.data == "typeof")
                         _typeof();
-                    }
+                    else if (object.data == "strlen")
+                        _strlen();
+                    else if (object.data == "at")
+                        at();
                 }
             }
         }
@@ -228,32 +230,54 @@ void Interpreter::interpret(const vector<Object> objects)
     }
 }
 
+void Interpreter::_strlen()
+{
+    Object obj = main_stack.top();
+    main_stack.pop();
+    Object res;
+    res.type = NUMBER;
+    res.data = to_string(obj.data.size());
+    main_stack.push(res);
+}
+
+void Interpreter::at()
+{
+    Object num = main_stack.top();
+    main_stack.pop();
+    Object obj = main_stack.top();
+    main_stack.pop();
+    Object res;
+    res.type = STRING;
+    res.data = obj.data[stoi(num.data)];
+    main_stack.push(res);
+}
+
 void Interpreter::_typeof()
 {
     Object obj = main_stack.top();
     main_stack.pop();
     Object res;
     res.type = STRING;
-    switch(obj.type)
+    switch (obj.type)
     {
-        case BOOL:
-            res.data = "bool";
-            break;
-        case NUMBER:
-            res.data = "number";
-            break;
-        case STRING:
-            res.data = "string";
-            break;
-        case ARRAY:
-            res.data = "array";
-            break;
-        case _NULL:
-            res.data = "null";
-            break;
-        default:
-            res.data = "keyword";
-            break;
+    case BOOL:
+        res.data = "bool";
+        break;
+    case NUMBER:
+        res.data = "number";
+        break;
+    case STRING:
+        res.data = "string";
+        break;
+    case ARRAY:
+        res.data = "array";
+        break;
+    case _NULL:
+        res.data = "null";
+        break;
+    default:
+        res.data = "keyword";
+        break;
     }
     main_stack.push(res);
 }
@@ -267,7 +291,6 @@ void Interpreter::swap()
     main_stack.push(top1);
     main_stack.push(top2);
 }
-
 
 void Interpreter::include()
 {
@@ -580,14 +603,26 @@ void Interpreter::_not()
 }
 void Interpreter::add()
 {
-    float top = stof(main_stack.top().data);
+    Object top = main_stack.top();
     main_stack.pop();
-    float top1 = stof(main_stack.top().data);
+    Object top1 = main_stack.top();
     main_stack.pop();
-    Object obj;
-    obj.type = NUMBER;
-    obj.data = to_string(top + top1);
-    main_stack.push(obj);
+    if (top.type == NUMBER && top1.type == NUMBER)
+    {
+        Object obj;
+        obj.type = NUMBER;
+        obj.data = to_string(stof(top1.data) + stof(top.data));
+        main_stack.push(obj);
+        return;
+    }
+    else if (top.type == STRING && top1.type == STRING)
+    {
+        Object obj;
+        obj.type = STRING;
+        obj.data = top1.data + top.data;
+        main_stack.push(obj);
+        return;
+    }
 }
 void Interpreter::subtract()
 {
@@ -731,16 +766,29 @@ void Interpreter::equal_to()
     main_stack.pop();
     Object obj;
     obj.type = BOOL;
-    if (top1.data == top.data)
+    if (top1.type == NUMBER)
     {
-        obj.data = "true";
-        main_stack.push(obj);
+        if (stof(top1.data) == stof(top.data))
+        {
+            obj.data = "true";
+        }
+        else
+        {
+            obj.data = "false";
+        }
     }
     else
     {
-        obj.data = "false";
-        main_stack.push(obj);
+        if (top1.data == top.data)
+        {
+            obj.data = "true";
+        }
+        else
+        {
+            obj.data = "false";
+        }
     }
+    main_stack.push(obj);
 }
 bool Interpreter::is_truthy(Object obj)
 {
@@ -756,7 +804,7 @@ bool Interpreter::is_truthy(Object obj)
         if (obj.data == "true")
             flag = true;
     }
-    else if(obj.type == _NULL)
+    else if (obj.type == _NULL)
     {
         flag = false;
     }

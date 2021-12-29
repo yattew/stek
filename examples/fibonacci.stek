@@ -12,8 +12,6 @@ function fibonacci do
         second val first set
         second set
     end pop
-    null first set
-    null second set
-    null till set
+    null null null first set second set till set
 end
 10 fibonacci

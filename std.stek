@@ -14,27 +14,6 @@ function -- do
     1 - 
 end
 
-function factorial do
-    var num var res
-    ++ num set
-    1 res set
-    while num val -- num set num val do
-        num val 
-        res val
-        *
-        res set
-    end
-    res val
-    null null num set res set
-end
-
-function pow do
-    while -- dup do
-        swap dup * swap
-    end
-    pop
-end
-
 function <= do
     var t1 var t2
     t1 set t2 set
@@ -55,4 +34,55 @@ function >= do
         0
     end
     null null t1 set t2 set
+end
+
+function remove do
+    var num num set
+    var res "" res set
+    var len dup strlen len set
+    var str str set
+    -1 while ++ dup len val < do
+        if dup num val == not do
+            dup
+            str val
+            swap at
+            res val
+            swap
+            +
+            res set
+        end
+    end pop
+    res val
+end
+ 
+function append do
+    +
+end
+
+function abs do
+    if dup 0 < do
+        dup -1 * 
+        swap pop
+    end
+end
+
+function factorial do
+    var num var res
+    ++ num set
+    1 res set
+    while num val -- num set num val do
+        num val 
+        res val
+        *
+        res set
+    end
+    res val
+    null null num set res set
+end
+
+function pow do
+    while -- dup do
+        swap dup * swap
+    end
+    pop
 end
