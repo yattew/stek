@@ -6,6 +6,7 @@ enum TYPE
     ARRAY,
     _NULL,
     KEYWORD,
+    T_VAR,
 };
 struct Object
 {

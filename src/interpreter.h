@@ -181,6 +181,10 @@ void Interpreter::interpret(const vector<Object> objects)
             }
             else if (control_flow_stack.top().second == true)
             {
+                if(var_dict.find(object.data) != var_dict.end())
+                {
+                    object.type = TYPE::T_VAR;
+                }
                 main_stack.push(object);
                 if (control_flow_stack.top().first == VAR)
                 {
@@ -749,6 +753,9 @@ void Interpreter::_typeof()
         break;
     case _NULL:
         res.data = "null";
+        break;
+    case TYPE::T_VAR:
+        res.data = "var";
         break;
     default:
         res.data = "keyword";
